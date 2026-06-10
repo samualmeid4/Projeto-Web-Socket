@@ -1,45 +1,117 @@
-# Projeto WebSocket - Pedidos em tempo real
+# Projeto WebSocket
 
-Aplicacao Java Web simples para demonstrar comunicacao em tempo real com WebSocket.
+Projeto simples em Node.js para demonstrar comunicacao em tempo real usando WebSocket. A aplicacao sobe um servidor HTTP, entrega uma pagina web estatica e permite que clientes conectados troquem mensagens em tempo real.
+
+## Funcionalidades
+
+- Servidor HTTP em Node.js.
+- Comunicacao WebSocket usando a biblioteca `ws`.
+- Interface web simples com campo de mensagem e lista de eventos.
+- Mensagens de chat enviadas para todos os clientes conectados.
+- Avisos de entrada e saida de clientes.
+- Alerta automatico do servidor a cada 10 segundos.
+
+## Tecnologias
+
+- Node.js
+- JavaScript
+- HTML
+- CSS
+- Biblioteca [`ws`](https://www.npmjs.com/package/ws)
+
+## Estrutura do projeto
+
+```text
+websocket/
+  README.md
+  web-socket/
+    package.json
+    package-lock.json
+    server.js
+    public/
+      index.html
+      script.js
+      style.css
+```
 
 ## Como executar
 
-1. Abrir o projeto no NetBeans.
-2. Executar em um servidor Java EE compativel com WebSocket, como GlassFish.
-3. Acessar `http://localhost:8080/WS2/` em duas abas ou dois navegadores.
-4. Enviar uma mensagem em uma aba e observar o broadcast chegando nas duas.
+Entre na pasta do projeto Node.js:
 
-## Requisitos atendidos
-
-- Servidor WebSocket em `ws://localhost:8080/WS2/acoes`.
-- Interface web em HTML, CSS e JavaScript.
-- Envio de mensagens do cliente para o servidor.
-- Broadcast do servidor para todos os clientes conectados.
-- Exibicao visual das mensagens recebidas.
-- Logs no console do servidor para abertura, recebimento e encerramento de conexao.
-
-## Decisoes tecnicas
-
-a) As conexoes dos clientes foram armazenadas em um `ConcurrentHashMap`, usando o ID da sessao como chave.
-
-b) Cada cliente conectado e identificado pelo `Session.getId()` e pelo nome informado na interface.
-
-c) Com polling, cada cliente faria requisicoes HTTP repetidas, aumentando trafego, consumo do servidor e atraso entre uma atualizacao e outra.
-
-d) WebSocket e mais adequado para chats, notificacoes, paineis de pedidos, monitoramento e cenarios que exigem atualizacao em tempo real.
-
-## Formato das mensagens
-
-As mensagens usam JSON para deixar explicita a acao executada e os dados enviados.
-
-Exemplo de envio do cliente:
-
-```json
-{"acao":"adicionar","descricao":"Novo pedido #104 recebido"}
+```bash
+cd web-socket
 ```
 
-Exemplo de broadcast do servidor:
+Instale as dependencias:
+
+```bash
+npm install
+```
+
+Inicie o servidor:
+
+```bash
+node server.js
+```
+
+Depois acesse no navegador:
+
+```text
+http://localhost:3000
+```
+
+Para testar a comunicacao em tempo real, abra o mesmo endereco em duas abas do navegador e envie mensagens por uma delas.
+
+## Como funciona
+
+O arquivo `server.js` cria um servidor HTTP na porta `3000` e entrega os arquivos da pasta `public`.
+
+Na mesma porta, o servidor tambem cria um servidor WebSocket. Quando um cliente se conecta, ele recebe um ID. As mensagens enviadas por qualquer cliente sao repassadas para todos os clientes conectados.
+
+O front-end, em `public/script.js`, abre uma conexao com:
+
+```js
+ws://localhost:3000
+```
+
+Depois ele escuta mensagens vindas do servidor e adiciona cada evento na lista exibida na pagina.
+
+## Observacao importante
+
+No `server.js`, a funcao `broadcast` esta sendo chamada, mas no codigo atual ela aparece comentada. Para o envio de mensagens funcionar, essa funcao precisa estar ativa:
+
+```js
+function broadcast(msg) {
+    const mensagem = JSON.stringify(msg);
+
+    clientes.forEach((cliente) => {
+        if (cliente.readyState === WebSocket.OPEN) {
+            cliente.send(mensagem);
+        }
+    });
+}
+```
+
+Sem essa funcao, o servidor pode gerar erro quando um cliente conectar ou quando o alerta automatico for disparado.
+
+## Scripts disponíveis
+
+Atualmente o `package.json` nao possui um script de inicializacao configurado. Por isso, use:
+
+```bash
+node server.js
+```
+
+Se quiser adicionar um script de start, inclua no `package.json`:
 
 ```json
-{"acao":"comentarioAdicionado","clienteId":"1","nome":"Caixa 1","descricao":"Novo pedido #104 recebido","totalClientes":2}
+"scripts": {
+  "start": "node server.js"
+}
+```
+
+Depois disso, o projeto podera ser iniciado com:
+
+```bash
+npm start
 ```
